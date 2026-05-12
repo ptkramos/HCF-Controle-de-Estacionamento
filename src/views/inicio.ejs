@@ -1,0 +1,117 @@
+<%- include('partials/header') %>
+
+    <div class="page-wrapper page-wrapper--top">
+        <div class="container">
+            <div style="margin-bottom: 24px;">
+                <h1 class="card__title"
+                    style="margin-bottom: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    Solicitações
+                </h1>
+
+                <div style="display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+                    <a href="/inicio?status=todos" class="list-card__badge"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'todos' ? 'background: var(--primary); color: white;' : 'background: #f0f7ff; color: var(--primary);' %>">
+                        Todos
+                    </a>
+
+                    <a href="/inicio?status=pendente" class="list-card__badge"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'pendente' ? 'background: #f59e0b; color: white;' : 'background: #fffbeb; color: #d97706;' %>">
+                        <span
+                            style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
+                        Pendente
+                    </a>
+
+                    <a href="/inicio?status=aprovado" class="list-card__badge"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'aprovado' ? 'background: #10b981; color: white;' : 'background: #ecfdf5; color: #059669;' %>">
+                        <span
+                            style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
+                        Aprovado
+                    </a>
+
+                    <a href="/inicio?status=indeferido" class="list-card__badge"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'indeferido' ? 'background: #ef4444; color: white;' : 'background: #fef2f2; color: #dc2626;' %>">
+                        <span
+                            style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
+                        Indeferido
+                    </a>
+                </div>
+            </div>
+
+            <% if (vehicles && vehicles.length> 0) { %>
+                <style>
+                    /* Aprovado (Verde) */
+                    .list-card.list-card--active { border-left-color: #10b981; }
+                    .list-card__badge.list-card__badge--active { background-color: #ecfdf5; color: #059669; }
+                    
+                    /* Pendente (Amarelo) */
+                    .list-card.list-card--future { border-left-color: #f59e0b; }
+                    .list-card__badge.list-card__badge--future { background-color: #fffbeb; color: #d97706; }
+                    
+                    /* Indeferido (Vermelho) */
+                    .list-card.list-card--expired { border-left-color: #ef4444; }
+                    .list-card__badge.list-card__badge--expired { background-color: #fef2f2; color: #dc2626; }
+                </style>
+                <div class="list-grid">
+                    <% vehicles.forEach(v=> {
+                        let statusClass = v.status === 'aprovado' ? 'active' : (v.status === 'pendente' ? 'future' :
+                        'expired');
+                        let statusLabel = v.status === 'aprovado' ? 'Aprovado' : (v.status === 'pendente' ? 'Pendente' :
+                        'Indeferido');
+
+                        let imgSrc = 'outro.png';
+                        if(v.vehicle_type === 'Carro') imgSrc = 'carro.png';
+                        if(v.vehicle_type === 'Moto') imgSrc = 'moto.png';
+                        %>
+                        <div class="list-card list-card--<%= statusClass %>" style="cursor: pointer;"
+                            onclick="window.location.href='/inicio/analisar/<%= v.plate %>'">
+                            <img src="/images/<%= imgSrc %>" alt="<%= v.vehicle_type %>"
+                                style="width: 42px; height: 42px; object-fit: contain; flex-shrink: 0;">
+                            <div class="list-card__info">
+                                <div class="list-card__title">
+                                    <%= v.full_name %>
+                                </div>
+                                <div class="list-card__meta"
+                                    style="flex-wrap: nowrap; gap: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    <span>
+                                        <%= v.brand %>
+                                            <%= v.model %>
+                                    </span>
+                                    <span style="color: var(--border)">&bull;</span>
+                                    <span style="display: inline-flex; align-items: center; gap: 4px;"><i
+                                            data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                        <%= new Date(v.created_at).toLocaleDateString('pt-BR') %>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="list-card__actions" style="display: flex; align-items: center; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span class="list-card__badge list-card__badge--<%= statusClass %>">
+                                        <span
+                                            style="width: 8px; height: 8px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
+                                        <%= statusLabel %>
+                                    </span>
+                                    <span
+                                        style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">
+                                        Placa: <%= v.plate %>
+                                    </span>
+                                </div>
+                                <% if (v.status==='aprovado' ) { %>
+                                    <div class="list-card__count" style="background: var(--primary); border-radius: 99px; padding: 4px 12px; height: auto;">
+                                        <a href="/inicio/pdf/<%= v.id %>" target="_blank"
+                                            style="color: white; font-size: 0.8rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 4px;"
+                                            onclick="event.stopPropagation();"><i data-lucide="download" class="w-3 h-3"></i> PDF</a>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <% }) %>
+                </div>
+                <% } else { %>
+                    <div class="empty-state" style="text-align: center; padding: 3rem 1rem;">
+                        <p class="empty-state__text">Nenhuma solicitação encontrada.</p>
+                    </div>
+                    <% } %>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>

@@ -1,0 +1,396 @@
+<%- include('partials/header') %>
+
+    <div class="container">
+        <div class="card" style="max-width: 600px; margin: 2rem auto;">
+            <div class="card__header" style="text-align: center;">
+                <h2 class="card__title">Solicitação de Estacionamento</h2>
+            </div>
+
+            <div class="card__body">
+                <% if (typeof error !=='undefined' && error) { %>
+                    <div class="alert alert--error" style="margin-bottom: 1.5rem;">
+                        <%= error %>
+                    </div>
+                    <% } %>
+
+                        <!-- Indicador de Progresso -->
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
+                            <div
+                                style="position: absolute; top: 15px; left: 0; width: 100%; height: 2px; background: #eee; z-index: 1;">
+                            </div>
+                            <div class="step-indicator active" id="indicator-1">1</div>
+                            <div class="step-indicator" id="indicator-2">2</div>
+                            <div class="step-indicator" id="indicator-3">3</div>
+                            <div class="step-indicator" id="indicator-4">4</div>
+                        </div>
+
+                        <form action="/solicitar" method="POST" id="wizard-form">
+
+                            <!-- PARTE 1: Colaborador -->
+                            <div class="wizard-step active" id="step-1">
+                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações do Colaborador
+                                </h3>
+
+                                <div class="form-group">
+                                    <label>Nome Completo <span style="color: red;">*</span></label>
+                                    <input type="text" name="fullName" class="form-input" required pattern=".*\s+.*"
+                                        title="Por favor, informe pelo menos nome e sobrenome">
+                                </div>
+                                <div class="form-group">
+                                    <label>Matrícula/SIAPE <span style="color: red;">*</span></label>
+                                    <input type="text" name="matricula" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Setor <span style="color: red;">*</span></label>
+                                    <input type="text" name="sector" class="form-input" required>
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Ramal <span style="color: red;">*</span></label>
+                                        <input type="text" name="ramal" class="form-input" required>
+                                    </div>
+                                    <div class="form-group" style="flex: 2;">
+                                        <label>Telefone/WhatsApp <span style="color: red;">*</span></label>
+                                        <input type="text" name="phone" class="form-input" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail (Institucional se houver) <span style="color: red;">*</span></label>
+                                    <input type="email" name="email" class="form-input" required>
+                                </div>
+
+                                <div style="text-align: right; margin-top: 2rem;">
+                                    <button type="button" class="btn btn--primary"
+                                        onclick="nextStep(2)">Próximo</button>
+                                </div>
+                            </div>
+
+                            <!-- PARTE 2: Veículo -->
+                            <div class="wizard-step" id="step-2" style="display: none;">
+                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações do Veículo</h3>
+
+                                <div class="form-group">
+                                    <label>Tipo <span style="color: red;">*</span></label>
+                                    <div class="type-select" style="grid-template-columns: repeat(3, 1fr);">
+                                        <div class="type-select__option">
+                                            <input type="radio" name="vehicleType" value="Carro" id="type-carro"
+                                                required>
+                                            <label for="type-carro" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/carro.png" alt="Carro"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Carro</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="type-select__option">
+                                            <input type="radio" name="vehicleType" value="Moto" id="type-moto" required>
+                                            <label for="type-moto" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/moto.png" alt="Moto"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Moto</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="type-select__option">
+                                            <input type="radio" name="vehicleType" value="Outro" id="type-outro"
+                                                required>
+                                            <label for="type-outro" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/outro.png" alt="Outro"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Outro</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Marca <span style="color: red;">*</span></label>
+                                        <input type="text" name="brand" class="form-input" required>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Modelo <span style="color: red;">*</span></label>
+                                        <input type="text" name="model" class="form-input" required>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Cor <span style="color: red;">*</span></label>
+                                        <input type="text" name="color" class="form-input" required>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Placa <span style="color: red;">*</span></label>
+                                        <input type="text" name="plate" class="form-input" required
+                                            style="text-transform: uppercase;">
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                                    <button type="button" class="btn btn--outline" onclick="prevStep(1)">Voltar</button>
+                                    <button type="button" class="btn btn--primary"
+                                        onclick="nextStep(3)">Próximo</button>
+                                </div>
+                            </div>
+
+                            <!-- PARTE 3: Adicionais -->
+                            <div class="wizard-step" id="step-3" style="display: none;">
+                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações Adicionais</h3>
+
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 0.5rem;">Pessoa com
+                                        Deficiência?</label>
+                                    <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                                        <div class="type-select__option">
+                                            <input type="radio" name="isPcd" value="sim" id="pcd-sim">
+                                            <label for="pcd-sim" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/sim.webp" alt="Sim"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Sim</span>
+                                            </label>
+                                        </div>
+                                        <div class="type-select__option">
+                                            <input type="radio" name="isPcd" value="nao" id="pcd-nao" checked>
+                                            <label for="pcd-nao" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/nao.webp" alt="Não"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 0.5rem;">Idoso?</label>
+                                    <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                                        <div class="type-select__option">
+                                            <input type="radio" name="isElderly" value="sim" id="elderly-sim">
+                                            <label for="elderly-sim" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/sim.webp" alt="Sim"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Sim</span>
+                                            </label>
+                                        </div>
+                                        <div class="type-select__option">
+                                            <input type="radio" name="isElderly" value="nao" id="elderly-nao" checked>
+                                            <label for="elderly-nao" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/nao.webp" alt="Não"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 0.5rem;">Necessita Vaga
+                                        Especial?</label>
+                                    <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                                        <div class="type-select__option">
+                                            <input type="radio" name="needsSpecialSpot" value="sim" id="special-sim"
+                                                onchange="toggleSpecialSpot(true)">
+                                            <label for="special-sim" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/sim.webp" alt="Sim"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Sim</span>
+                                            </label>
+                                        </div>
+                                        <div class="type-select__option">
+                                            <input type="radio" name="needsSpecialSpot" value="nao" id="special-nao"
+                                                checked onchange="toggleSpecialSpot(false)">
+                                            <label for="special-nao" class="type-select__label"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                                <img src="/images/nao.webp" alt="Não"
+                                                    style="width: 48px; height: 48px; object-fit: contain;">
+                                                <span>Não</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="special-spot-details-container" style="display: none; margin-top: 1rem;">
+                                        <label>Se sim, especificar:</label>
+                                        <input type="text" name="specialSpotDetails" class="form-input"
+                                            id="special-spot-details">
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                                    <button type="button" class="btn btn--outline" onclick="prevStep(2)">Voltar</button>
+                                    <button type="button" class="btn btn--primary"
+                                        onclick="nextStep(4)">Próximo</button>
+                                </div>
+                            </div>
+
+                            <!-- PARTE 4: Ciência -->
+                            <div class="wizard-step" id="step-4" style="display: none;">
+                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Ciência e Responsabilidade
+                                </h3>
+
+                                <div
+                                    style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 1.5rem;">
+                                    <p style="margin-bottom: 1rem; line-height: 1.5;">
+                                        1. Declaro que as informações prestadas são verdadeiras e me comprometo a
+                                        comunicar
+                                        qualquer alteração cadastral.
+                                    </p>
+                                    <p style="line-height: 1.5;">
+                                        2. Estou ciente de que o cadastro não garante vaga fixa, estando sujeito à
+                                        disponibilidade e normas internas da unidade.
+                                    </p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label
+                                        style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
+                                        <input type="checkbox" required
+                                            style="margin-top: 0.25rem; accent-color: #198754; width: 1.2rem; height: 1.2rem;">
+                                        <span style="font-weight: 500; margin-top: 0.25rem;">Li e estou de acordo com os
+                                            termos acima.</span>
+                                    </label>
+                                </div>
+
+                                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                                    <button type="button" class="btn btn--outline" onclick="prevStep(3)">Voltar</button>
+                                    <button type="submit" class="btn btn--primary">Enviar Solicitação</button>
+                                </div>
+                            </div>
+
+                        </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .step-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #999;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .step-indicator.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #f0f7ff;
+        }
+
+        .step-indicator.completed {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Estilos para o seletor de tipo de veículo (SGP Style) */
+        .type-select {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .type-select__option {
+            position: relative;
+        }
+
+        .type-select__option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .type-select__label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid var(--border, #e2e8f0);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        @media (min-width: 768px) {
+            .type-select__label {
+                padding: 16px;
+            }
+        }
+
+        .type-select__option input:checked+.type-select__label {
+            border-color: var(--primary);
+            background: transparent;
+            color: var(--secondary, var(--primary));
+            font-weight: 700;
+        }
+    </style>
+
+    <script>
+        function nextStep(step) {
+            // Validação básica do HTML5 antes de prosseguir
+            const currentStepDiv = document.getElementById('step-' + (step - 1));
+            const inputs = currentStepDiv.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value || !input.checkValidity()) {
+                    isValid = false;
+                    input.style.borderColor = 'red';
+                    if (!input.value) {
+                        // Empty field
+                    } else if (input.name === 'fullName') {
+                        alert("Por favor, preencha nome e sobrenome completos.");
+                    }
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+
+            if (!isValid) return;
+
+            document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
+            document.getElementById('step-' + step).style.display = 'block';
+
+            document.getElementById('indicator-' + (step - 1)).classList.add('completed');
+            document.getElementById('indicator-' + (step - 1)).classList.remove('active');
+            document.getElementById('indicator-' + step).classList.add('active');
+        }
+
+        function prevStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
+            document.getElementById('step-' + step).style.display = 'block';
+
+            document.getElementById('indicator-' + (step + 1)).classList.remove('active');
+            document.getElementById('indicator-' + step).classList.remove('completed');
+            document.getElementById('indicator-' + step).classList.add('active');
+        }
+
+        function toggleSpecialSpot(show) {
+            const container = document.getElementById('special-spot-details-container');
+            const input = document.getElementById('special-spot-details');
+            if (show) {
+                container.style.display = 'block';
+                input.required = true;
+            } else {
+                container.style.display = 'none';
+                input.required = false;
+                input.value = '';
+            }
+        }
+    </script>
+
+    <%- include('partials/footer') %>

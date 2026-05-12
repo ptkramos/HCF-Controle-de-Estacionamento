@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Controle de Estacionamento' %></title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+    <!-- Tailwind & Lucide -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#004983',
+                        'primary-light': '#f0f7ff',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <nav class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50" style="margin-bottom: 2rem;">
+        <div class="w-full flex justify-center px-4 sm:px-6">
+            <div class="w-full max-w-[1024px] flex items-center h-16 relative">
+                <!-- Logo Section (Left) -->
+                <div class="flex-1 flex justify-start items-center">
+                    <a href="/" class="flex-shrink-0 flex items-center">
+                        <img src="/images/ce_logo.webp" alt="Controle de Estacionamento" style="height: 36px; width: auto;">
+                    </a>
+                </div>
+
+                <% if (typeof user !== 'undefined' && user) { %>
+                    <!-- Desktop Menu (Center) -->
+                    <div class="hidden md:flex md:justify-center md:items-center md:gap-2 shrink-0">
+                        <a href="/"
+                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-[#004983] hover:bg-[#004983] hover:text-white transition-colors whitespace-nowrap">
+                            <i data-lucide="home" class="w-4 h-4"></i> Início
+                        </a>
+
+                        <a href="/inicio"
+                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-[#004983] hover:bg-[#004983] hover:text-white transition-colors whitespace-nowrap">
+                            <i data-lucide="list" class="w-4 h-4"></i> Solicitações
+                        </a>
+                    </div>
+
+                    <!-- User Info & Sair (Right) -->
+                    <div class="flex-1 hidden md:flex items-center justify-end gap-4">
+                        <span class="text-gray-500 text-[13px] flex items-center gap-1.5 whitespace-nowrap font-medium">
+                            <i data-lucide="user" class="w-4 h-4 text-[#004983]"></i>
+                            <%= user.fullName %>
+                        </span>
+                        <a href="/logout"
+                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors whitespace-nowrap">
+                            <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+                        </a>
+                    </div>
+
+                    <!-- Mobile menu button -->
+                    <div class="flex-1 flex justify-end items-center md:hidden">
+                        <button type="button" id="mobile-menu-btn"
+                            class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-[#004983] hover:bg-[#f0f7ff] transition-colors"
+                            aria-expanded="false">
+                            <span class="sr-only">Abrir menu</span>
+                            <i id="menu-icon" data-lucide="menu" class="block h-6 w-6"></i>
+                        </button>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <% if (typeof user !== 'undefined' && user) { %>
+            <!-- Mobile Menu Panel -->
+            <div class="md:hidden hidden absolute w-full bg-white border-b border-gray-100 shadow-lg" id="mobile-menu">
+                <div class="px-5 pt-2 pb-4 space-y-1">
+                    <div class="px-3 py-3 mb-2 border-b border-gray-50 flex items-center gap-2">
+                        <i data-lucide="user" class="w-4 h-4 text-gray-400"></i>
+                        <span class="text-sm font-medium text-gray-600">
+                            <%= user.fullName %>
+                        </span>
+                    </div>
+
+                    <a href="/"
+                        class="flex items-center gap-2 px-3 py-3 rounded-2xl text-[15px] font-bold text-[#004983] hover:bg-[#004983] hover:text-white transition-colors">
+                        <i data-lucide="home" class="w-4 h-4"></i> Início
+                    </a>
+
+                    <a href="/inicio"
+                        class="flex items-center gap-2 px-3 py-3 rounded-2xl text-[15px] font-bold text-[#004983] hover:bg-[#004983] hover:text-white transition-colors">
+                        <i data-lucide="list" class="w-4 h-4"></i> Solicitações
+                    </a>
+
+                    <a href="/logout"
+                        class="flex items-center gap-2 mt-2 px-3 py-3 rounded-2xl text-[15px] font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+                    </a>
+                </div>
+            </div>
+            <script>
+                document.getElementById('mobile-menu-btn')?.addEventListener('click', function () {
+                    const menu = document.getElementById('mobile-menu');
+                    const icon = document.getElementById('menu-icon');
+                    if (menu.classList.contains('hidden')) {
+                        menu.classList.remove('hidden');
+                        if (icon) {
+                            icon.setAttribute('data-lucide', 'x');
+                            lucide.createIcons();
+                        }
+                    } else {
+                        menu.classList.add('hidden');
+                        if (icon) {
+                            icon.setAttribute('data-lucide', 'menu');
+                            lucide.createIcons();
+                        }
+                    }
+                });
+            </script>
+        <% } %>
+    </nav>
+    <main class="main-content">

@@ -1,0 +1,240 @@
+<%- include('partials/header') %>
+
+    <div class="page-wrapper page-wrapper--top">
+        <div class="container" style="max-width: 800px; margin: 0 auto;">
+
+            <div class="card card--full" style="padding: 32px 24px;">
+                <div class="detail-header"
+                    style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 16px; align-items: center; max-width: 100%;">
+                        <% let imgSrc='outro.png' ; if(vehicle.vehicle_type==='Carro' ) imgSrc='carro.png' ;
+                            if(vehicle.vehicle_type==='Moto' ) imgSrc='moto.png' ; let
+                            statusClass=vehicle.status==='aprovado' ? 'active' : (vehicle.status==='pendente' ? 'future'
+                            : 'expired' ); let statusLabel=vehicle.status==='aprovado' ? 'Aprovado' :
+                            (vehicle.status==='pendente' ? 'Pendente' : 'Indeferido' ); %>
+                            <img src="/images/<%= imgSrc %>" alt="<%= vehicle.vehicle_type %>"
+                                style="width: 64px; height: 64px; object-fit: contain; flex-shrink: 0;">
+
+                            <div class="detail-header__info" style="overflow: hidden; flex: 1;">
+                                <div
+                                    style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
+                                    <h1 class="card__title"
+                                        style="margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--primary); text-transform: uppercase;">
+                                        <%= vehicle.vehicle_type %>
+                                            <%= vehicle.plate %>
+                                    </h1>
+                                    <span class="list-card__badge list-card__badge--<%= statusClass %>"
+                                        style="margin-bottom: 0; padding: 4px 12px; font-size: 0.85rem;">
+                                        <span
+                                            style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
+                                        <%= statusLabel %>
+                                    </span>
+                                </div>
+                                <div class="detail-meta-row"
+                                    style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: var(--secondary); margin-bottom: 4px; flex-wrap: wrap;">
+                                    <span style="font-weight: 500;">
+                                        <%= vehicle.brand %>
+                                            <%= vehicle.model %>
+                                    </span>
+                                    <span style="color: var(--border)">&bull;</span>
+                                    <span style="display: inline-flex; align-items: center; gap: 4px;"><i
+                                            data-lucide="palette" class="w-4 h-4"></i>
+                                        <%= vehicle.color %>
+                                    </span>
+                                    <span style="color: var(--border)">&bull;</span>
+                                    <span style="display: inline-flex; align-items: center; gap: 4px;"><i
+                                            data-lucide="calendar" class="w-4 h-4"></i>
+                                        <%= new Date(vehicle.created_at).toLocaleDateString('pt-BR') %>
+                                    </span>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 24px 0;">
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; font-size: 0.95rem; background: var(--bg-body); padding: 20px; border-radius: var(--radius-md);">
+                    <div>
+                        <h3
+                            style="font-size: 1rem; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="user" class="w-4 h-4"></i> Dados do Colaborador</h3>
+                        <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>Nome:</strong>
+                            <%= vehicle.full_name %>
+                        </p>
+                        <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>Matrícula:</strong>
+                            <%= vehicle.matricula %>
+                        </p>
+                        <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>Setor:</strong>
+                            <%= vehicle.sector || '-' %>
+                        </p>
+                        <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>Ramal:</strong>
+                            <%= vehicle.ramal || '-' %>
+                        </p>
+                        <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>Telefone:</strong>
+                            <%= vehicle.phone || '-' %>
+                        </p>
+                        <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>E-mail:</strong>
+                            <%= vehicle.email || '-' %>
+                        </p>
+                    </div>
+                    <div>
+                        <h3
+                            style="font-size: 1rem; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="info" class="w-4 h-4"></i> Informações Adicionais</h3>
+                        <% let specialText=[]; if (vehicle.is_pcd) specialText.push('PCD'); if (vehicle.is_elderly)
+                            specialText.push('Idoso'); if (vehicle.needs_special_spot) specialText.push(`Vaga Especial
+                            (${vehicle.special_spot_details})`); %>
+                            <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>PCD/Idoso/Especial:</strong>
+                                <br>
+                                <%= specialText.length> 0 ? specialText.join('<br>') : 'Não' %>
+                            </p>
+                    </div>
+                </div>
+
+                <form action="/inicio/analisar/<%= vehicle.plate %>" method="POST">
+                    <div class="form-group">
+                        <label
+                            style="font-weight: 600; color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; display: block;">Análise
+                            da Solicitação</label>
+                        <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                            <div class="type-select__option">
+                                <input type="radio" name="status" value="aprovado" id="status-aprovado" <%=vehicle.status==='aprovado'
+                                    ? 'checked' : '' %>>
+                                <label for="status-aprovado" class="type-select__label status-aprovado-label"
+                                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                    <img src="/images/sim.webp" alt="Aprovado"
+                                        style="width: 48px; height: 48px; object-fit: contain;">
+                                    <span>Aprovado</span>
+                                </label>
+                            </div>
+                            <div class="type-select__option">
+                                <input type="radio" name="status" value="indeferido" id="status-indeferido" <%=vehicle.status==='indeferido'
+                                    ? 'checked' : '' %>>
+                                <label for="status-indeferido" class="type-select__label status-indeferido-label"
+                                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                    <img src="/images/nao.webp" alt="Indeferido"
+                                        style="width: 48px; height: 48px; object-fit: contain;">
+                                    <span>Indeferido</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 24px;">
+                        <label style="font-weight: 600; color: var(--primary);">Observações da Hotelaria</label>
+                        <textarea name="adminNotes" class="form-input" rows="4"
+                            placeholder="Adicione o motivo do indeferimento ou qualquer observação relevante..."><%= vehicle.admin_notes || '' %></textarea>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a href="/inicio" class="btn btn--outline" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0.75rem 1.5rem;">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn--primary"
+                            style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0.75rem 1.5rem;">
+                            <i data-lucide="save" class="w-4 h-4"></i> Salvar Análise
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Estilos para o seletor de tipo de veículo (SGP Style) */
+        .type-select {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .type-select__option {
+            position: relative;
+        }
+
+        .type-select__option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .type-select__label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid var(--border, #e2e8f0);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        @media (min-width: 768px) {
+            .type-select__label {
+                padding: 16px;
+            }
+        }
+
+        .type-select__option input:checked+.type-select__label {
+            background: var(--bg-body);
+        }
+
+        /* Cores específicas para Aprovação e Indeferimento */
+        .type-select__option input[value="aprovado"]:checked+.status-aprovado-label {
+            border-color: #10b981;
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .type-select__option input[value="indeferido"]:checked+.status-indeferido-label {
+            border-color: #ef4444;
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .type-select:hover .type-select__label {
+            border-color: #cbd5e1;
+        }
+        .type-select__option input:checked+.type-select__label {
+            border-color: inherit; /* overridden by specific rules above */
+        }
+
+        /* Reusing colors for the specific badges */
+        .list-card__badge--active {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+
+        .list-card__badge--future {
+            background-color: #fffbeb;
+            color: #d97706;
+        }
+
+        .list-card__badge--expired {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* Responsividade dos botões de ação */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        @media (max-width: 600px) {
+            .action-buttons {
+                flex-direction: column-reverse;
+            }
+            .action-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <%- include('partials/footer') %>

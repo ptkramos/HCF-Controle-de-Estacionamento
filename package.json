@@ -1,0 +1,29 @@
+{
+  "name": "controle-estacionamento",
+  "version": "1.0.0",
+  "description": "Sistema de Controle de Estacionamento - Hospital Cardoso Fontes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node src/config/seed.js"
+  },
+  "keywords": ["estacionamento", "hospital"],
+  "author": "HCF Team",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.9.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "node-cron": "^4.2.1",
+    "pdfkit": "^0.18.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
