@@ -40,7 +40,7 @@ function initializeDatabase() {
         CREATE TABLE IF NOT EXISTS vehicles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             full_name TEXT NOT NULL,
-            matricula TEXT NOT NULL,
+            cpf TEXT NOT NULL,
             sector TEXT,
             ramal TEXT,
             phone TEXT,
@@ -63,11 +63,25 @@ function initializeDatabase() {
         )
     `);
 
+    // Migração: Se a coluna matricula existir, renomear para cpf
+    const tableInfo = db.prepare("PRAGMA table_info(vehicles)").all();
+    const hasMatricula = tableInfo.some(col => col.name === 'matricula');
+    const hasCpf = tableInfo.some(col => col.name === 'cpf');
+
+    if (hasMatricula && !hasCpf) {
+        try {
+            db.exec("ALTER TABLE vehicles RENAME COLUMN matricula TO cpf");
+            console.log('✅ Coluna matricula renomeada para cpf com sucesso');
+        } catch (e) {
+            console.error('Erro ao renomear coluna:', e);
+        }
+    }
+
     // Índices
     db.exec(`
         CREATE INDEX IF NOT EXISTS idx_vehicles_status ON vehicles(status);
         CREATE INDEX IF NOT EXISTS idx_vehicles_plate ON vehicles(plate);
-        CREATE INDEX IF NOT EXISTS idx_vehicles_matricula ON vehicles(matricula);
+        CREATE INDEX IF NOT EXISTS idx_vehicles_cpf ON vehicles(cpf);
     `);
 
     console.log('✅ Banco de dados inicializado com sucesso (Estacionamento)');

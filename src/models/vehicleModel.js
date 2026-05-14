@@ -5,12 +5,12 @@ const vehicleModel = {
         const db = getDatabase();
         const result = db.prepare(`
             INSERT INTO vehicles (
-                full_name, matricula, sector, ramal, phone, email, 
+                full_name, cpf, sector, ramal, phone, email, 
                 vehicle_type, brand, model, color, plate, 
                 is_pcd, is_elderly, needs_special_spot, special_spot_details, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente')
         `).run(
-            data.full_name, data.matricula, data.sector, data.ramal, data.phone, data.email,
+            data.full_name, data.cpf, data.sector, data.ramal, data.phone, data.email,
             data.vehicle_type, data.brand, data.model, data.color, data.plate,
             data.is_pcd ? 1 : 0, data.is_elderly ? 1 : 0, data.needs_special_spot ? 1 : 0, data.special_spot_details || null
         );

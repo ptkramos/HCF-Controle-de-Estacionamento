@@ -8,28 +8,34 @@
                     Solicitações
                 </h1>
 
+                <% 
+                const styleTodos = currentStatus === 'todos' ? 'background: var(--primary); color: white;' : 'background: #f0f7ff; color: var(--primary);';
+                const stylePendente = currentStatus === 'pendente' ? 'background: #f59e0b; color: white;' : 'background: #fffbeb; color: #d97706;';
+                const styleAprovado = currentStatus === 'aprovado' ? 'background: #10b981; color: white;' : 'background: #ecfdf5; color: #059669;';
+                const styleIndeferido = currentStatus === 'indeferido' ? 'background: #ef4444; color: white;' : 'background: #fef2f2; color: #dc2626;';
+                %>
                 <div style="display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
                     <a href="/inicio?status=todos" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'todos' ? 'background: var(--primary); color: white;' : 'background: #f0f7ff; color: var(--primary);' %>">
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- styleTodos %>">
                         Todos
                     </a>
 
                     <a href="/inicio?status=pendente" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'pendente' ? 'background: #f59e0b; color: white;' : 'background: #fffbeb; color: #d97706;' %>">
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- stylePendente %>">
                         <span
                             style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
                         Pendente
                     </a>
 
                     <a href="/inicio?status=aprovado" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'aprovado' ? 'background: #10b981; color: white;' : 'background: #ecfdf5; color: #059669;' %>">
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- styleAprovado %>">
                         <span
                             style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
                         Aprovado
                     </a>
 
                     <a href="/inicio?status=indeferido" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%= currentStatus === 'indeferido' ? 'background: #ef4444; color: white;' : 'background: #fef2f2; color: #dc2626;' %>">
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- styleIndeferido %>">
                         <span
                             style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
                         Indeferido

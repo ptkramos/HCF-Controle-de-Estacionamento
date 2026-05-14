@@ -13,13 +13,13 @@ const formController = {
     submit(req, res) {
         try {
             const {
-                fullName, matricula, sector, ramal, phone, email,
+                fullName, cpf, sector, ramal, phone, email,
                 vehicleType, brand, model, color, plate,
                 isPcd, isElderly, needsSpecialSpot, specialSpotDetails
             } = req.body;
 
             // Validação simples de campos obrigatórios
-            if (!fullName || !matricula || !sector || !ramal || !phone || !email || !vehicleType || !brand || !model || !color || !plate) {
+            if (!fullName || !cpf || !sector || !ramal || !phone || !email || !vehicleType || !brand || !model || !color || !plate) {
                 return res.render('index', {
                     title: 'Controle de Estacionamento - HCF',
                     error: 'Por favor, preencha todos os campos obrigatórios.'
@@ -35,7 +35,7 @@ const formController = {
 
             vehicleModel.create({
                 full_name: normalizedFullName,
-                matricula: matricula,
+                cpf: cpf,
                 sector: sector,
                 ramal: ramal,
                 phone: phone,
