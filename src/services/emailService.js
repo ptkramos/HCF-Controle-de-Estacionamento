@@ -1,4 +1,10 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// Forçar a resolução de DNS do Node.js a priorizar IPv4 para evitar erros ENETUNREACH de IPv6
+if (typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 // Inicializa o transportador SMTP de forma segura
 let transporter = null;
@@ -15,6 +21,9 @@ if (smtpUser && smtpPass) {
             pass: smtpPass
         },
         family: 4,
+        lookup: (hostname, options, callback) => {
+            dns.lookup(hostname, { ...options, family: 4 }, callback);
+        },
         connectionTimeout: 10000, // 10 segundos de limite para conexão
         greetingTimeout: 10000,   // 10 segundos para o greeting SMTP
         socketTimeout: 15000      // 15 segundos de inatividade do socket
