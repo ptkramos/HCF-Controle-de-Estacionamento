@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+
+    <div class="container" style="max-width: 500px; margin: 2rem auto; padding: 0 16px;">
+        <div class="card"
+            style="border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); border: none; background: white; max-width: 100%; animation: fadeInUp 0.5s ease; padding: 0;">
+
+            <!-- Header Banner -->
+            <div class="card__header"
+                style="text-align: center; padding: 32px 24px 16px 24px; border-bottom: 2px dashed #e2e8f0;">
+                <div style="margin-bottom: 16px;">
+                    <img src="/images/validar.png" alt="Validação"
+                        style="height: 64px; width: auto; display: inline-block; object-fit: contain;">
+                </div>
+                <h2 class="card__title" style="margin-bottom: 0;">Validação de Estacionamento</h2>
+            </div>
+
+            <div style="padding: 24px;">
+                <% if (typeof error !=='undefined' && error) { %>
+                    <div class="alert alert--error" style="margin-bottom: 20px;">
+                        <i data-lucide="alert-circle" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+                        <div style="font-size: 0.9rem;">
+                            <strong>Erro ao Validar:</strong>
+                            <%= error %>
+                        </div>
+                    </div>
+                    <% } %>
+
+                        <form action="/validar" method="GET" style="display: grid; gap: 20px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="plate"
+                                    style="display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 8px;">
+                                    Placa do Veículo
+                                </label>
+                                <div style="position: relative;">
+                                    <div
+                                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; display: flex; align-items: center;">
+                                        <i data-lucide="search" style="width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <input type="text" name="plate" id="plate" placeholder="Ex: ABC-1234 ou ABC1D23"
+                                        value="<%= typeof plate !== 'undefined' ? plate : '' %>" required
+                                        class="form-input"
+                                        style="padding-left: 46px; font-weight: 700; text-transform: uppercase; font-size: 1.15rem; letter-spacing: 0.05em; border-radius: 12px; height: 52px;"
+                                        oninput="this.value = this.value.toUpperCase()">
+                                </div>
+                                <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 8px; line-height: 1.4;">
+                                    Digite a placa sem traço, com traço ou no formato Mercosul.
+                                </p>
+                            </div>
+
+                            <button type="submit" class="btn btn--primary"
+                                style="border-radius: 12px; height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; width: 100%; border: none; font-weight: 600; cursor: pointer;">
+                                Verificar Placa
+                            </button>
+                        </form>
+            </div>
+
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>

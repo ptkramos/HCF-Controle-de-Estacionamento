@@ -50,7 +50,7 @@ const adminController = {
 
     // GET /inicio
     dashboard(req, res) {
-        const { status } = req.query;
+        const status = req.query.status || 'pendente';
         let vehicles;
 
         if (status && status !== 'todos') {
@@ -59,17 +59,28 @@ const adminController = {
             vehicles = vehicleModel.findAll();
         }
 
+        // Calcular contadores dinamicamente para os chips
+        const { getDatabase } = require('../config/database');
+        const db = getDatabase();
+        const counts = {
+            todos: db.prepare('SELECT COUNT(*) as count FROM vehicles').get().count,
+            pendente: db.prepare("SELECT COUNT(*) as count FROM vehicles WHERE status = 'pendente'").get().count,
+            aprovado: db.prepare("SELECT COUNT(*) as count FROM vehicles WHERE status = 'aprovado'").get().count,
+            indeferido: db.prepare("SELECT COUNT(*) as count FROM vehicles WHERE status = 'indeferido'").get().count
+        };
+
         res.render('inicio', { 
             title: 'Painel Hotelaria',
             vehicles,
-            currentStatus: status || 'todos'
+            currentStatus: status,
+            counts
         });
     },
 
-    // GET /inicio/analisar/:plate
+    // GET /inicio/analisar/:id
     analyzePage(req, res) {
-        const { plate } = req.params;
-        const vehicle = vehicleModel.findByPlate(plate);
+        const { id } = req.params;
+        const vehicle = vehicleModel.findById(id);
         
         if (!vehicle) {
             return res.redirect('/inicio');
@@ -81,15 +92,33 @@ const adminController = {
         });
     },
 
-    // POST /inicio/analisar/:plate
-    analyzeSubmit(req, res) {
-        const { plate } = req.params;
+    // POST /inicio/analisar/:id
+    async analyzeSubmit(req, res) {
+        const { id } = req.params;
         const { status, adminNotes } = req.body;
         
         try {
-            const vehicle = vehicleModel.findByPlate(plate);
+            const vehicle = vehicleModel.findById(id);
             if (vehicle) {
                 vehicleModel.updateStatus(vehicle.id, status, adminNotes, req.session.user.id);
+
+                // Carregar veículo atualizado para o e-mail
+                const updatedVehicle = vehicleModel.findById(vehicle.id);
+                
+                let pdfBuffer = null;
+                if (status === 'aprovado') {
+                    const pdfService = require('../services/pdfService');
+                    const protocol = req.protocol;
+                    const host = req.get('host');
+                    const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
+                    pdfBuffer = await pdfService.generateSticker(updatedVehicle, baseUrl);
+                }
+
+                // Disparar e-mail de atualização de status (Aprovado com PDF ou Indeferido)
+                const emailService = require('../services/emailService');
+                emailService.sendStatusUpdate(updatedVehicle, pdfBuffer).catch(err => {
+                    console.error('Erro ao enviar e-mail de atualização de status:', err);
+                });
             }
             res.redirect('/inicio');
         } catch (error) {
@@ -108,7 +137,10 @@ const adminController = {
             }
 
             const pdfService = require('../services/pdfService');
-            const pdfBuffer = await pdfService.generateSticker(vehicle);
+            const protocol = req.protocol;
+            const host = req.get('host');
+            const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
+            const pdfBuffer = await pdfService.generateSticker(vehicle, baseUrl);
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `inline; filename="selo_${vehicle.plate}.pdf"`);
@@ -116,6 +148,25 @@ const adminController = {
         } catch (error) {
             console.error('Erro ao gerar selo PDF:', error);
             res.status(500).send('Erro interno ao gerar o PDF.');
+        }
+    },
+
+    attachDocument(req, res) {
+        const { id } = req.params;
+        try {
+            if (!req.file) {
+                console.warn('Nenhum arquivo enviado para anexar comprovante PCD.');
+                return res.redirect(`/inicio/analisar/${id}`);
+            }
+            const vehicle = vehicleModel.findById(id);
+            if (vehicle) {
+                vehicleModel.updateAttachment(id, req.file.filename);
+                console.log(`✅ Comprovante PCD anexado com sucesso para o veículo ID: ${id}`);
+            }
+            res.redirect(`/inicio/analisar/${id}`);
+        } catch (error) {
+            console.error('Erro ao anexar documento via painel admin:', error);
+            res.redirect(`/inicio/analisar/${id}`);
         }
     }
 };

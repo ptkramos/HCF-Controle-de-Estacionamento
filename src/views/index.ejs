@@ -7,262 +7,266 @@
             </div>
 
             <div class="card__body">
-                <% if (typeof error !=='undefined' && error) { %>
-                    <div class="alert alert--error" style="margin-bottom: 1.5rem;">
-                        <%= error %>
-                    </div>
-                    <% } %>
+                <div id="form-error" class="alert alert--error" <% if (typeof error === 'undefined' || !error) { %>style="margin-bottom: 1.5rem; display: none;"<% } else { %>style="margin-bottom: 1.5rem;"<% } %>>
+                    <span id="form-error-text">
+                        <%= (typeof error !== 'undefined' && error) ? error : '' %>
+                    </span>
+                </div>
 
-                        <!-- Indicador de Progresso -->
-                        <div
-                            style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
-                            <div
-                                style="position: absolute; top: 15px; left: 0; width: 100%; height: 2px; background: #eee; z-index: 1;">
+                <!-- Indicador de Progresso -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
+                    <div
+                        style="position: absolute; top: 15px; left: 0; width: 100%; height: 2px; background: #eee; z-index: 1;">
+                    </div>
+                    <div class="step-indicator active" id="indicator-1">1</div>
+                    <div class="step-indicator" id="indicator-2">2</div>
+                    <div class="step-indicator" id="indicator-3">3</div>
+                    <div class="step-indicator" id="indicator-4">4</div>
+                </div>
+
+                <form action="/solicitar" method="POST" id="wizard-form" enctype="multipart/form-data">
+
+                    <!-- PARTE 1: Colaborador -->
+                    <div class="wizard-step active" id="step-1">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações do Colaborador
+                        </h3>
+
+                        <div class="form-group">
+                            <label>Nome Completo <span style="color: red;">*</span></label>
+                            <input type="text" name="fullName" class="form-input" required pattern=".*\s+.*"
+                                title="Por favor, informe pelo menos nome e sobrenome">
+                        </div>
+                        <div class="form-group">
+                            <label>CPF <span style="color: red;">*</span></label>
+                            <input type="text" name="cpf" class="form-input" placeholder="000.000.000-00" required
+                                oninput="applyCpfMask(this)">
+                        </div>
+                        <div class="form-group">
+                            <label>Setor <span style="color: red;">*</span></label>
+                            <input type="text" name="sector" class="form-input" required>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Ramal <span style="color: red;">*</span></label>
+                                <input type="text" name="ramal" class="form-input" required>
                             </div>
-                            <div class="step-indicator active" id="indicator-1">1</div>
-                            <div class="step-indicator" id="indicator-2">2</div>
-                            <div class="step-indicator" id="indicator-3">3</div>
-                            <div class="step-indicator" id="indicator-4">4</div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>Telefone/WhatsApp <span style="color: red;">*</span></label>
+                                <input type="text" name="phone" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail (Institucional se houver) <span style="color: red;">*</span></label>
+                            <input type="email" name="email" class="form-input" required>
                         </div>
 
-                        <form action="/solicitar" method="POST" id="wizard-form">
+                        <div style="text-align: right; margin-top: 2rem;">
+                            <button type="button" class="btn btn--primary" onclick="nextStep(2)">Próximo</button>
+                        </div>
+                    </div>
 
-                            <!-- PARTE 1: Colaborador -->
-                            <div class="wizard-step active" id="step-1">
-                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações do Colaborador
-                                </h3>
+                    <!-- PARTE 2: Veículo -->
+                    <div class="wizard-step" id="step-2" style="display: none;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações do Veículo</h3>
 
-                                <div class="form-group">
-                                    <label>Nome Completo <span style="color: red;">*</span></label>
-                                    <input type="text" name="fullName" class="form-input" required pattern=".*\s+.*"
-                                        title="Por favor, informe pelo menos nome e sobrenome">
-                                </div>
-                                <div class="form-group">
-                                    <label>CPF <span style="color: red;">*</span></label>
-                                    <input type="text" name="cpf" class="form-input" placeholder="000.000.000-00" required
-                                        oninput="applyCpfMask(this)">
-                                </div>
-                                <div class="form-group">
-                                    <label>Setor <span style="color: red;">*</span></label>
-                                    <input type="text" name="sector" class="form-input" required>
-                                </div>
-                                <div style="display: flex; gap: 1rem;">
-                                    <div class="form-group" style="flex: 1;">
-                                        <label>Ramal <span style="color: red;">*</span></label>
-                                        <input type="text" name="ramal" class="form-input" required>
-                                    </div>
-                                    <div class="form-group" style="flex: 2;">
-                                        <label>Telefone/WhatsApp <span style="color: red;">*</span></label>
-                                        <input type="text" name="phone" class="form-input" required>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>E-mail (Institucional se houver) <span style="color: red;">*</span></label>
-                                    <input type="email" name="email" class="form-input" required>
-                                </div>
-
-                                <div style="text-align: right; margin-top: 2rem;">
-                                    <button type="button" class="btn btn--primary"
-                                        onclick="nextStep(2)">Próximo</button>
-                                </div>
-                            </div>
-
-                            <!-- PARTE 2: Veículo -->
-                            <div class="wizard-step" id="step-2" style="display: none;">
-                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações do Veículo</h3>
-
-                                <div class="form-group">
-                                    <label>Tipo <span style="color: red;">*</span></label>
-                                    <div class="type-select" style="grid-template-columns: repeat(3, 1fr);">
-                                        <div class="type-select__option">
-                                            <input type="radio" name="vehicleType" value="Carro" id="type-carro"
-                                                required>
-                                            <label for="type-carro" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/carro.png" alt="Carro"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Carro</span>
-                                            </label>
-                                        </div>
-
-                                        <div class="type-select__option">
-                                            <input type="radio" name="vehicleType" value="Moto" id="type-moto" required>
-                                            <label for="type-moto" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/moto.png" alt="Moto"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Moto</span>
-                                            </label>
-                                        </div>
-
-                                        <div class="type-select__option">
-                                            <input type="radio" name="vehicleType" value="Outro" id="type-outro"
-                                                required>
-                                            <label for="type-outro" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/outro.png" alt="Outro"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Outro</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; gap: 1rem;">
-                                    <div class="form-group" style="flex: 1;">
-                                        <label>Marca <span style="color: red;">*</span></label>
-                                        <input type="text" name="brand" class="form-input" required>
-                                    </div>
-                                    <div class="form-group" style="flex: 1;">
-                                        <label>Modelo <span style="color: red;">*</span></label>
-                                        <input type="text" name="model" class="form-input" required>
-                                    </div>
-                                </div>
-                                <div style="display: flex; gap: 1rem;">
-                                    <div class="form-group" style="flex: 1;">
-                                        <label>Cor <span style="color: red;">*</span></label>
-                                        <input type="text" name="color" class="form-input" required>
-                                    </div>
-                                    <div class="form-group" style="flex: 1;">
-                                        <label>Placa <span style="color: red;">*</span></label>
-                                        <input type="text" name="plate" class="form-input" required
-                                            style="text-transform: uppercase;">
-                                    </div>
-                                </div>
-
-                                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-                                    <button type="button" class="btn btn--outline" onclick="prevStep(1)">Voltar</button>
-                                    <button type="button" class="btn btn--primary"
-                                        onclick="nextStep(3)">Próximo</button>
-                                </div>
-                            </div>
-
-                            <!-- PARTE 3: Adicionais -->
-                            <div class="wizard-step" id="step-3" style="display: none;">
-                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações Adicionais</h3>
-
-                                <div class="form-group">
-                                    <label style="display: block; margin-bottom: 0.5rem;">Pessoa com
-                                        Deficiência?</label>
-                                    <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
-                                        <div class="type-select__option">
-                                            <input type="radio" name="isPcd" value="sim" id="pcd-sim">
-                                            <label for="pcd-sim" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/sim.webp" alt="Sim"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Sim</span>
-                                            </label>
-                                        </div>
-                                        <div class="type-select__option">
-                                            <input type="radio" name="isPcd" value="nao" id="pcd-nao" checked>
-                                            <label for="pcd-nao" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/nao.webp" alt="Não"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Não</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label style="display: block; margin-bottom: 0.5rem;">Idoso?</label>
-                                    <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
-                                        <div class="type-select__option">
-                                            <input type="radio" name="isElderly" value="sim" id="elderly-sim">
-                                            <label for="elderly-sim" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/sim.webp" alt="Sim"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Sim</span>
-                                            </label>
-                                        </div>
-                                        <div class="type-select__option">
-                                            <input type="radio" name="isElderly" value="nao" id="elderly-nao" checked>
-                                            <label for="elderly-nao" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/nao.webp" alt="Não"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Não</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label style="display: block; margin-bottom: 0.5rem;">Necessita Vaga
-                                        Especial?</label>
-                                    <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
-                                        <div class="type-select__option">
-                                            <input type="radio" name="needsSpecialSpot" value="sim" id="special-sim"
-                                                onchange="toggleSpecialSpot(true)">
-                                            <label for="special-sim" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/sim.webp" alt="Sim"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Sim</span>
-                                            </label>
-                                        </div>
-                                        <div class="type-select__option">
-                                            <input type="radio" name="needsSpecialSpot" value="nao" id="special-nao"
-                                                checked onchange="toggleSpecialSpot(false)">
-                                            <label for="special-nao" class="type-select__label"
-                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-                                                <img src="/images/nao.webp" alt="Não"
-                                                    style="width: 48px; height: 48px; object-fit: contain;">
-                                                <span>Não</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div id="special-spot-details-container" style="display: none; margin-top: 1rem;">
-                                        <label>Se sim, especificar:</label>
-                                        <input type="text" name="specialSpotDetails" class="form-input"
-                                            id="special-spot-details">
-                                    </div>
-                                </div>
-
-                                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-                                    <button type="button" class="btn btn--outline" onclick="prevStep(2)">Voltar</button>
-                                    <button type="button" class="btn btn--primary"
-                                        onclick="nextStep(4)">Próximo</button>
-                                </div>
-                            </div>
-
-                            <!-- PARTE 4: Ciência -->
-                            <div class="wizard-step" id="step-4" style="display: none;">
-                                <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Ciência e Responsabilidade
-                                </h3>
-
-                                <div
-                                    style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 1.5rem;">
-                                    <p style="margin-bottom: 1rem; line-height: 1.5;">
-                                        1. Declaro que as informações prestadas são verdadeiras e me comprometo a
-                                        comunicar
-                                        qualquer alteração cadastral.
-                                    </p>
-                                    <p style="line-height: 1.5;">
-                                        2. Estou ciente de que o cadastro não garante vaga fixa, estando sujeito à
-                                        disponibilidade e normas internas da unidade.
-                                    </p>
-                                </div>
-
-                                <div class="form-group">
-                                    <label
-                                        style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
-                                        <input type="checkbox" required
-                                            style="margin-top: 0.25rem; accent-color: #198754; width: 1.2rem; height: 1.2rem;">
-                                        <span style="font-weight: 500; margin-top: 0.25rem;">Li e estou de acordo com os
-                                            termos acima.</span>
+                        <div class="form-group">
+                            <label>Tipo <span style="color: red;">*</span></label>
+                            <div class="type-select" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="type-select__option">
+                                    <input type="radio" name="vehicleType" value="Carro" id="type-carro" required>
+                                    <label for="type-carro" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/carro.png" alt="Carro"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Carro</span>
                                     </label>
                                 </div>
 
-                                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-                                    <button type="button" class="btn btn--outline" onclick="prevStep(3)">Voltar</button>
-                                    <button type="submit" class="btn btn--primary">Enviar Solicitação</button>
+                                <div class="type-select__option">
+                                    <input type="radio" name="vehicleType" value="Moto" id="type-moto" required>
+                                    <label for="type-moto" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/moto.png" alt="Moto"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Moto</span>
+                                    </label>
+                                </div>
+
+                                <div class="type-select__option">
+                                    <input type="radio" name="vehicleType" value="Outro" id="type-outro" required>
+                                    <label for="type-outro" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/outro.png" alt="Outro"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Outro</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Marca <span style="color: red;">*</span></label>
+                                <input type="text" name="brand" class="form-input" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Modelo <span style="color: red;">*</span></label>
+                                <input type="text" name="model" class="form-input" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Cor <span style="color: red;">*</span></label>
+                                <input type="text" name="color" class="form-input" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Placa <span style="color: red;">*</span></label>
+                                <input type="text" name="plate" class="form-input" required
+                                    style="text-transform: uppercase;">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                            <button type="button" class="btn btn--outline" onclick="prevStep(1)">Voltar</button>
+                            <button type="button" class="btn btn--primary" onclick="nextStep(3)">Próximo</button>
+                        </div>
+                    </div>
+
+                    <!-- PARTE 3: Adicionais -->
+                    <div class="wizard-step" id="step-3" style="display: none;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Informações Adicionais</h3>
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 0.5rem;">Pessoa com Deficiência (PCD)?</label>
+                            <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="type-select__option">
+                                    <input type="radio" name="isPcd" value="sim" id="pcd-sim"
+                                        onchange="togglePcd(true)">
+                                    <label for="pcd-sim" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/sim.webp" alt="Sim"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Sim</span>
+                                    </label>
+                                </div>
+                                <div class="type-select__option">
+                                    <input type="radio" name="isPcd" value="nao" id="pcd-nao" checked
+                                        onchange="togglePcd(false)">
+                                    <label for="pcd-nao" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/nao.webp" alt="Não"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Não</span>
+                                    </label>
                                 </div>
                             </div>
 
-                        </form>
+                            <!-- Upload de Comprovante PCD (Exibido apenas se for PCD) -->
+                            <div id="pcd-upload-container" style="display: none; margin-top: 1rem;">
+                                <label style="font-weight: 600;">Comprovante de Condição Especial (PCD) <span
+                                        style="color: red;">*</span></label>
+                                <input type="file" name="pcdAttachment" id="pcd-attachment" class="form-input"
+                                    accept=".pdf,image/png,image/jpeg,image/jpg" style="padding: 8px;">
+                                <small style="color: var(--text-muted, #666); display: block; margin-top: 4px;">Envie o
+                                    cartão de vaga especial ou laudo em formato PDF ou imagem.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 0.5rem;">Idoso?</label>
+                            <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="type-select__option">
+                                    <input type="radio" name="isElderly" value="sim" id="elderly-sim">
+                                    <label for="elderly-sim" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/sim.webp" alt="Sim"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Sim</span>
+                                    </label>
+                                </div>
+                                <div class="type-select__option">
+                                    <input type="radio" name="isElderly" value="nao" id="elderly-nao" checked>
+                                    <label for="elderly-nao" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/nao.webp" alt="Não"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Não</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pergunta exibida apenas se NÃO for PCD, removendo a redundância -->
+                        <div class="form-group" id="special-spot-group">
+                            <label style="display: block; margin-bottom: 0.5rem;">Necessita Vaga Especial?</label>
+                            <div class="type-select" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="type-select__option">
+                                    <input type="radio" name="needsSpecialSpot" value="sim" id="special-sim"
+                                        onchange="toggleSpecialSpot(true)">
+                                    <label for="special-sim" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/sim.webp" alt="Sim"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Sim</span>
+                                    </label>
+                                </div>
+                                <div class="type-select__option">
+                                    <input type="radio" name="needsSpecialSpot" value="nao" id="special-nao" checked
+                                        onchange="toggleSpecialSpot(false)">
+                                    <label for="special-nao" class="type-select__label"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                        <img src="/images/nao.webp" alt="Não"
+                                            style="width: 48px; height: 48px; object-fit: contain;">
+                                        <span>Não</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="special-spot-details-container" style="display: none; margin-top: 1rem;">
+                            <label id="special-details-label">Se sim, especificar:</label>
+                            <input type="text" name="specialSpotDetails" class="form-input" id="special-spot-details">
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                            <button type="button" class="btn btn--outline" onclick="prevStep(2)">Voltar</button>
+                            <button type="button" class="btn btn--primary" onclick="nextStep(4)">Próximo</button>
+                        </div>
+                    </div>
+
+                    <!-- PARTE 4: Ciência -->
+                    <div class="wizard-step" id="step-4" style="display: none;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Ciência e Responsabilidade
+                        </h3>
+
+                        <div
+                            style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 1.5rem;">
+                            <p style="margin-bottom: 1rem; line-height: 1.5;">
+                                1. Declaro que as informações prestadas são verdadeiras e me comprometo a
+                                comunicar
+                                qualquer alteração cadastral.
+                            </p>
+                            <p style="line-height: 1.5;">
+                                2. Estou ciente de que o cadastro não garante vaga fixa, estando sujeito à
+                                disponibilidade e normas internas da unidade.
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
+                                <input type="checkbox" required
+                                    style="margin-top: 0.25rem; accent-color: #198754; width: 1.2rem; height: 1.2rem;">
+                                <span style="font-weight: 500; margin-top: 0.25rem;">Li e estou de acordo com os
+                                    termos acima.</span>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                            <button type="button" class="btn btn--outline" onclick="prevStep(3)">Voltar</button>
+                            <button type="submit" class="btn btn--primary">Enviar Solicitação</button>
+                        </div>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
@@ -344,7 +348,7 @@
         function applyCpfMask(input) {
             let value = input.value.replace(/\D/g, '');
             if (value.length > 11) value = value.slice(0, 11);
-            
+
             if (value.length > 9) {
                 value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
             } else if (value.length > 6) {
@@ -371,11 +375,30 @@
             return true;
         }
 
-        function nextStep(step) {
+        function showError(message) {
+            const errorDiv = document.getElementById('form-error');
+            const errorText = document.getElementById('form-error-text');
+            if (errorDiv && errorText) {
+                errorText.innerText = message;
+                errorDiv.style.display = 'flex';
+                document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('form-error');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        async function nextStep(step) {
+            hideError();
             // Validação básica do HTML5 antes de prosseguir
             const currentStepDiv = document.getElementById('step-' + (step - 1));
             const inputs = currentStepDiv.querySelectorAll('input[required], select[required]');
             let isValid = true;
+            let cpfInput = null;
 
             inputs.forEach(input => {
                 if (!input.value || !input.checkValidity()) {
@@ -384,18 +407,51 @@
                     if (!input.value) {
                         // Empty field
                     } else if (input.name === 'fullName') {
-                        alert("Por favor, preencha nome e sobrenome completos.");
+                        showError("Por favor, preencha nome e sobrenome completos.");
                     }
-                } else if (input.name === 'cpf' && !validarCPF(input.value)) {
-                    isValid = false;
-                    input.style.borderColor = 'red';
-                    alert("Por favor, informe um CPF válido.");
+                } else if (input.name === 'cpf') {
+                    cpfInput = input;
+                    if (!validarCPF(input.value)) {
+                        isValid = false;
+                        input.style.borderColor = 'red';
+                        showError("Por favor, informe um CPF válido.");
+                    } else {
+                        input.style.borderColor = '';
+                    }
                 } else {
                     input.style.borderColor = '';
                 }
             });
 
             if (!isValid) return;
+
+            // Se estiver saindo do passo 1 (Colaborador) para o passo 2
+            if (step === 2 && cpfInput) {
+                try {
+                    const nextBtn = currentStepDiv.querySelector('button[onclick^="nextStep"]');
+                    const originalText = nextBtn ? nextBtn.innerHTML : '';
+                    if (nextBtn) {
+                        nextBtn.disabled = true;
+                        nextBtn.innerHTML = 'Verificando...';
+                    }
+
+                    const response = await fetch('/api/check-cpf?cpf=' + encodeURIComponent(cpfInput.value));
+                    const data = await response.json();
+
+                    if (nextBtn) {
+                        nextBtn.disabled = false;
+                        nextBtn.innerHTML = originalText;
+                    }
+
+                    if (data.exists) {
+                        cpfInput.style.borderColor = 'red';
+                        showError("Já existe uma solicitação ativa para este CPF.");
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar duplicidade de CPF:', error);
+                }
+            }
 
             document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
             document.getElementById('step-' + step).style.display = 'block';
@@ -416,9 +472,11 @@
 
         function toggleSpecialSpot(show) {
             const container = document.getElementById('special-spot-details-container');
+            const label = document.getElementById('special-details-label');
             const input = document.getElementById('special-spot-details');
             if (show) {
                 container.style.display = 'block';
+                label.innerHTML = "Se sim, especificar: <span style='color: red;'>*</span>";
                 input.required = true;
             } else {
                 container.style.display = 'none';
@@ -426,6 +484,47 @@
                 input.value = '';
             }
         }
+
+        function togglePcd(isPcd) {
+            const uploadContainer = document.getElementById('pcd-upload-container');
+            const attachmentInput = document.getElementById('pcd-attachment');
+            const specialSpotGroup = document.getElementById('special-spot-group');
+            const specialDetailsContainer = document.getElementById('special-spot-details-container');
+            const detailsLabel = document.getElementById('special-details-label');
+            const detailsInput = document.getElementById('special-spot-details');
+
+            if (isPcd) {
+                uploadContainer.style.display = 'block';
+                attachmentInput.required = true;
+
+                // Oculta a pergunta redundante (pois PCD sempre tem direito a vaga)
+                specialSpotGroup.style.display = 'none';
+
+                // Mostra os detalhes diretamente para PCD preencher se achar necessário
+                specialDetailsContainer.style.display = 'block';
+                detailsLabel.innerHTML = "Especificações adicionais sobre a necessidade especial (opcional):";
+                detailsInput.required = false;
+            } else {
+                uploadContainer.style.display = 'none';
+                attachmentInput.required = false;
+                attachmentInput.value = '';
+
+                // Mostra o grupo de pergunta normal
+                specialSpotGroup.style.display = 'block';
+
+                const needsSpecial = document.getElementById('special-sim').checked;
+                toggleSpecialSpot(needsSpecial);
+            }
+        }
+
+        // Evitar duplo envio desativando o botão
+        document.getElementById('wizard-form').addEventListener('submit', function (e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Enviando...';
+            }
+        });
     </script>
 
     <%- include('partials/footer') %>

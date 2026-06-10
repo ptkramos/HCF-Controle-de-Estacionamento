@@ -8,7 +8,10 @@
     "dev": "nodemon server.js",
     "seed": "node src/config/seed.js"
   },
-  "keywords": ["estacionamento", "hospital"],
+  "keywords": [
+    "estacionamento",
+    "hospital"
+  ],
   "author": "HCF Team",
   "license": "ISC",
   "type": "commonjs",
@@ -19,9 +22,12 @@
     "ejs": "^5.0.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "multer": "^2.1.1",
     "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.11",
     "pdfkit": "^0.18.0",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -54,6 +54,7 @@ function initializeDatabase() {
             is_elderly BOOLEAN DEFAULT 0,
             needs_special_spot BOOLEAN DEFAULT 0,
             special_spot_details TEXT,
+            pcd_attachment TEXT,
             status TEXT DEFAULT 'pendente',
             admin_notes TEXT,
             analyzed_by INTEGER,
@@ -77,6 +78,17 @@ function initializeDatabase() {
         }
     }
 
+    // Migração: Adicionar coluna pcd_attachment se não existir
+    const hasPcdAttachment = tableInfo.some(col => col.name === 'pcd_attachment');
+    if (!hasPcdAttachment) {
+        try {
+            db.exec("ALTER TABLE vehicles ADD COLUMN pcd_attachment TEXT");
+            console.log('✅ Coluna pcd_attachment adicionada com sucesso');
+        } catch (e) {
+            console.error('Erro ao adicionar coluna pcd_attachment:', e);
+        }
+    }
+
     // Índices
     db.exec(`
         CREATE INDEX IF NOT EXISTS idx_vehicles_status ON vehicles(status);
@@ -84,7 +96,57 @@ function initializeDatabase() {
         CREATE INDEX IF NOT EXISTS idx_vehicles_cpf ON vehicles(cpf);
     `);
 
+    // Limpeza de duplicados
+    cleanDuplicateVehicles(db);
+
     console.log('✅ Banco de dados inicializado com sucesso (Estacionamento)');
+}
+
+function cleanDuplicateVehicles(db) {
+    try {
+        // Encontrar CPFs duplicados
+        const duplicates = db.prepare(`
+            SELECT cpf, COUNT(*) as count 
+            FROM vehicles 
+            GROUP BY cpf 
+            HAVING COUNT(*) > 1
+        `).all();
+
+        if (duplicates.length === 0) {
+            return;
+        }
+
+        console.log(`🔍 Encontrados ${duplicates.length} CPFs com registros duplicados no banco. Iniciando limpeza...`);
+
+        const deleteStmt = db.prepare('DELETE FROM vehicles WHERE id = ?');
+
+        for (const row of duplicates) {
+            const cpf = row.cpf;
+            // Obter todos os registros desse CPF
+            const records = db.prepare('SELECT id, status FROM vehicles WHERE cpf = ? ORDER BY id ASC').all(cpf);
+            
+            let keepId = null;
+            
+            // Priorizar o que estiver aprovado, se houver
+            const approved = records.filter(r => r.status === 'aprovado');
+            if (approved.length > 0) {
+                keepId = approved[approved.length - 1].id;
+            } else {
+                // Senão, manter o mais recente
+                keepId = records[records.length - 1].id;
+            }
+
+            // Deletar os outros
+            for (const record of records) {
+                if (record.id !== keepId) {
+                    deleteStmt.run(record.id);
+                }
+            }
+        }
+        console.log('✅ Limpeza de duplicados concluída com sucesso!');
+    } catch (error) {
+        console.error('❌ Erro ao limpar duplicados no banco:', error);
+    }
 }
 
 module.exports = { getDatabase, initializeDatabase };

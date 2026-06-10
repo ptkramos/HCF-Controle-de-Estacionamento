@@ -87,12 +87,44 @@
                             (${vehicle.special_spot_details})`); %>
                             <p style="margin-bottom: 0.5rem; color: var(--text);"><strong>PCD/Idoso/Especial:</strong>
                                 <br>
-                                <%= specialText.length> 0 ? specialText.join('<br>') : 'Não' %>
+                                <%- specialText.length> 0 ? specialText.join('<br>') : 'Não' %>
                             </p>
+
+                            <% if (vehicle.pcd_attachment) { %>
+                                <div style="margin-top: 16px;">
+                                    <strong style="color: var(--primary);">Comprovante PCD:</strong>
+                                    <div style="margin-top: 8px;">
+                                        <% if (vehicle.pcd_attachment.toLowerCase().endsWith('.pdf')) { %>
+                                            <a href="/uploads/<%= vehicle.pcd_attachment %>" target="_blank" class="btn btn--outline" 
+                                               style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.85rem;">
+                                                <i data-lucide="file-text" class="w-4 h-4"></i> Abrir Comprovante (PDF)
+                                            </a>
+                                        <% } else { %>
+                                            <a href="/uploads/<%= vehicle.pcd_attachment %>" target="_blank" style="display: block; border-radius: 8px; overflow: hidden; max-width: 200px; border: 1px solid var(--border); margin-bottom: 8px;">
+                                                <img src="/uploads/<%= vehicle.pcd_attachment %>" alt="Comprovante PCD" style="width: 100%; height: auto; max-height: 150px; object-fit: cover;">
+                                            </a>
+                                            <a href="/uploads/<%= vehicle.pcd_attachment %>" target="_blank" class="btn btn--outline" 
+                                               style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.85rem;">
+                                                <i data-lucide="eye" class="w-4 h-4"></i> Ver em Tela Cheia
+                                            </a>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% } else if (vehicle.is_pcd || vehicle.needs_special_spot) { %>
+                                <div style="margin-top: 16px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                                    <strong style="color: var(--primary); display: block; margin-bottom: 8px;">Anexar Comprovante PCD:</strong>
+                                    <form action="/inicio/analisar/<%= vehicle.id %>/anexar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 10px;">
+                                        <input type="file" name="pcdAttachment" required class="form-input" accept=".pdf,image/png,image/jpeg,image/jpg" style="padding: 6px; font-size: 0.85rem;">
+                                        <button type="submit" class="btn btn--primary" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; align-self: flex-start;">
+                                            <i data-lucide="upload" class="w-4 h-4"></i> Salvar Anexo
+                                        </button>
+                                    </form>
+                                </div>
+                            <% } %>
                     </div>
                 </div>
 
-                <form action="/inicio/analisar/<%= vehicle.plate %>" method="POST">
+                <form action="/inicio/analisar/<%= vehicle.id %>" method="POST">
                     <div class="form-group">
                         <label
                             style="font-weight: 600; color: var(--primary); font-size: 1.1rem; margin-bottom: 12px; display: block;">Análise

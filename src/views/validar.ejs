@@ -1,0 +1,135 @@
+<%- include('partials/header') %>
+
+    <div class="container" style="max-width: 500px; margin: 2rem auto; padding: 0 16px;">
+        <div class="card"
+            style="border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); border: none; background: white;">
+
+            <!-- Status Header Banner -->
+            <% let statusColor='#f59e0b' ; // pendente let statusBg='#fffbeb' ; let statusText='Em Análise' ; let
+                statusIcon='clock' ; let alertClass='border-yellow-200 text-yellow-700 bg-yellow-50' ; if
+                (vehicle.status==='aprovado' ) { statusColor='#10b981' ; statusBg='#ecfdf5' ; statusText='Vaga Liberada'
+                ; statusIcon='check-circle' ; alertClass='border-green-200 text-green-700 bg-green-50' ; } else if
+                (vehicle.status==='indeferido' ) { statusColor='#ef4444' ; statusBg='#fef2f2' ; statusText='Vaga Negada'
+                ; statusIcon='alert-triangle' ; alertClass='border-red-200 text-red-700 bg-red-50' ; } %>
+
+                <style>
+                    /* Classes de estilo para validação de acesso */
+                    .status-banner {
+                        border-bottom: 2px dashed #e2e8f0;
+                        padding: 32px 24px;
+                        text-align: center;
+                    }
+
+                    .status-banner--pendente {
+                        background-color: #fffbeb;
+                    }
+
+                    .status-banner--aprovado {
+                        background-color: #ecfdf5;
+                    }
+
+                    .status-banner--indeferido {
+                        background-color: #fef2f2;
+                    }
+                </style>
+
+                <div class="status-banner status-banner--<%= vehicle.status %>" style="padding: 24px 24px 16px 24px;">
+                    <div style="margin-bottom: 12px;">
+                        <% if (vehicle.status === 'aprovado') { %>
+                            <img src="/images/sim.webp" alt="Vaga Liberada" style="height: 64px; width: auto; display: inline-block; object-fit: contain;">
+                        <% } else { %>
+                            <img src="/images/nao.webp" alt="Vaga Negada" style="height: 64px; width: auto; display: inline-block; object-fit: contain;">
+                        <% } %>
+                    </div>
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #1e293b;">
+                        <%= statusText %>
+                    </h2>
+                    <p
+                        style="margin: 4px 0 0 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600;">
+                        Controle de Estacionamento HCF
+                    </p>
+                </div>
+
+                <!-- Vehicle Details -->
+                <div style="padding: 24px;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <span
+                            style="font-size: 0.8rem; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Placa
+                            do Veículo</span>
+                        <div
+                            style="font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-top: 4px; letter-spacing: 0.02em;">
+                            <%= vehicle.plate.toUpperCase() %>
+                        </div>
+                        <div style="font-size: 1rem; font-weight: 600; color: #64748b; margin-top: 4px;">
+                            <%= vehicle.brand %>
+                                <%= vehicle.model %> — <%= vehicle.color %>
+                        </div>
+                    </div>
+
+                    <!-- Meta Information List -->
+                    <div
+                        style="background: #f8fafc; border-radius: 12px; padding: 16px; display: grid; gap: 12px; font-size: 0.95rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                            <span style="color: #64748b; font-weight: 500;">Colaborador:</span>
+                            <span style="color: #0f172a; font-weight: 600; text-align: right;">
+                                <% 
+                                    let displayName = vehicle.full_name;
+                                    if (displayName) {
+                                        let parts = displayName.trim().split(/\s+/);
+                                        if (parts.length > 1) {
+                                            displayName = parts[0] + ' ' + parts[parts.length - 1];
+                                        }
+                                    }
+                                %>
+                                <%= displayName %>
+                            </span>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                            <span style="color: #64748b; font-weight: 500;">Setor:</span>
+                            <span style="color: #0f172a; font-weight: 600; text-align: right;">
+                                <%= vehicle.sector || '-' %>
+                            </span>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                            <span style="color: #64748b; font-weight: 500;">Vaga Especial:</span>
+                            <% if (vehicle.needs_special_spot) { %>
+                                <span style="color: #ef4444; font-weight: 700; text-align: right;">Sim (<%=
+                                        vehicle.special_spot_details || 'PCD' %>)</span>
+                                <% } else { %>
+                                    <span style="color: #0f172a; font-weight: 600; text-align: right;">Não</span>
+                                    <% } %>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                            <span style="color: #64748b; font-weight: 500;">Cadastro em:</span>
+                            <span style="color: #0f172a; font-weight: 600; text-align: right;">
+                                <%= new Date(vehicle.created_at).toLocaleDateString('pt-BR') %>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Warning/Notes -->
+                    <% if (vehicle.status==='indeferido' && vehicle.admin_notes) { %>
+                        <div class="mt-4 p-4 rounded-xl border border-red-100 bg-red-50 text-red-700 text-sm">
+                            <strong class="block mb-1">Motivo do Indeferimento:</strong>
+                            <%= vehicle.admin_notes %>
+                        </div>
+                    <% } %>
+
+                    <div style="margin-top: 24px; text-align: center;">
+                        <a href="/validar" class="btn btn--primary"
+                            style="border-radius: 12px; height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; width: 100%; border: none; font-weight: 600; cursor: pointer; text-decoration: none; color: white;">
+                            Voltar
+                        </a>
+                    </div>
+
+                </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>

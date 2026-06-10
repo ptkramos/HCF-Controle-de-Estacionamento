@@ -16,6 +16,7 @@ app.set('trust proxy', 1); // Confiar no proxy (Railway, Render, etc) para detec
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'data', 'uploads')));
 
 // Session
 app.use(session({

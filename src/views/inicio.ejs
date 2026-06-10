@@ -8,38 +8,76 @@
                     Solicitações
                 </h1>
 
-                <% 
-                const styleTodos = currentStatus === 'todos' ? 'background: var(--primary); color: white;' : 'background: #f0f7ff; color: var(--primary);';
-                const stylePendente = currentStatus === 'pendente' ? 'background: #f59e0b; color: white;' : 'background: #fffbeb; color: #d97706;';
-                const styleAprovado = currentStatus === 'aprovado' ? 'background: #10b981; color: white;' : 'background: #ecfdf5; color: #059669;';
-                const styleIndeferido = currentStatus === 'indeferido' ? 'background: #ef4444; color: white;' : 'background: #fef2f2; color: #dc2626;';
-                %>
-                <div style="display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
-                    <a href="/inicio?status=todos" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- styleTodos %>">
-                        Todos
+                <style>
+                    /* Classes de estilo para abas dinâmicas */
+                    .tab-todos { background: #f0f7ff; color: var(--primary); }
+                    .tab-todos.active { background: var(--primary); color: white !important; }
+                    
+                    .tab-pendente { background: #fffbeb; color: #d97706; }
+                    .tab-pendente.active { background: #f59e0b; color: white !important; }
+                    
+                    .tab-aprovado { background: #ecfdf5; color: #059669; }
+                    .tab-aprovado.active { background: #10b981; color: white !important; }
+                    
+                    .tab-indeferido { background: #fef2f2; color: #dc2626; }
+                    .tab-indeferido.active { background: #ef4444; color: white !important; }
+
+                    /* Estilos do filtro especial secundário */
+                    .active-special {
+                        border-color: var(--primary) !important;
+                        background-color: #f0f7ff !important;
+                        color: var(--primary) !important;
+                        font-weight: 700 !important;
+                    }
+                </style>
+                <!-- Primeira linha de abas: Status -->
+                <div style="display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-bottom: 12px;">
+                    <a href="/inicio?status=todos" class="list-card__badge tab-todos <%= currentStatus === 'todos' ? 'active' : '' %>"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0;">
+                        Todos (<%= counts.todos %>)
                     </a>
 
-                    <a href="/inicio?status=pendente" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- stylePendente %>">
+                    <a href="/inicio?status=pendente" class="list-card__badge tab-pendente <%= currentStatus === 'pendente' ? 'active' : '' %>"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0;">
                         <span
                             style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
-                        Pendente
+                        Pendente (<%= counts.pendente %>)
                     </a>
 
-                    <a href="/inicio?status=aprovado" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- styleAprovado %>">
+                    <a href="/inicio?status=aprovado" class="list-card__badge tab-aprovado <%= currentStatus === 'aprovado' ? 'active' : '' %>"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0;">
                         <span
                             style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
-                        Aprovado
+                        Aprovado (<%= counts.aprovado %>)
                     </a>
 
-                    <a href="/inicio?status=indeferido" class="list-card__badge"
-                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0; <%- styleIndeferido %>">
+                    <a href="/inicio?status=indeferido" class="list-card__badge tab-indeferido <%= currentStatus === 'indeferido' ? 'active' : '' %>"
+                        style="cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 0.85rem; flex-shrink: 0;">
                         <span
                             style="width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; display: inline-block; flex-shrink: 0;"></span>
-                        Indeferido
+                        Indeferido (<%= counts.indeferido %>)
                     </a>
+                </div>
+
+                <!-- Segunda linha de filtros: PCD e Idoso (Vagas Especiais) -->
+                <div style="display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-bottom: 12px; align-items: center;">
+                    <button type="button" onclick="toggleSpecialFilter('pcd', this)" class="special-filter-btn" style="cursor: pointer; padding: 3px 10px; font-size: 0.78rem; border-radius: 99px; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-weight: 500; outline: none; transition: all 0.2s;">
+                        PCD
+                    </button>
+                    
+                    <button type="button" onclick="toggleSpecialFilter('idoso', this)" class="special-filter-btn" style="cursor: pointer; padding: 3px 10px; font-size: 0.78rem; border-radius: 99px; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-weight: 500; outline: none; transition: all 0.2s;">
+                        Idoso
+                    </button>
+                </div>
+
+                <!-- Barra de Busca -->
+                <div style="position: relative; margin-top: 16px; margin-bottom: 8px;">
+                    <div style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none;">
+                        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <input type="text" id="search-input" placeholder="Buscar por colaborador ou placa..." 
+                        style="width: 100%; padding: 10px 16px 10px 42px; border: 1.5px solid #cbd5e1; border-radius: 99px; font-size: 0.95rem; outline: none; transition: border-color 0.2s;"
+                        oninput="filterVehicles(this.value)">
                 </div>
             </div>
 
@@ -68,8 +106,13 @@
                         if(v.vehicle_type === 'Carro') imgSrc = 'carro.png';
                         if(v.vehicle_type === 'Moto') imgSrc = 'moto.png';
                         %>
-                        <div class="list-card list-card--<%= statusClass %>" style="cursor: pointer;"
-                            onclick="window.location.href='/inicio/analisar/<%= v.plate %>'">
+                        <div class="list-card list-card--<%= statusClass %> vehicle-item" style="cursor: pointer;"
+                            data-name="<%= v.full_name.toLowerCase() %>"
+                            data-plate="<%= v.plate.toLowerCase() %>"
+                            data-pcd="<%= v.is_pcd ? '1' : '0' %>"
+                            data-elderly="<%= v.is_elderly ? '1' : '0' %>"
+                            data-special="<%= v.needs_special_spot ? '1' : '0' %>"
+                            onclick="window.location.href='/inicio/analisar/<%= v.id %>'">
                             <img src="/images/<%= imgSrc %>" alt="<%= v.vehicle_type %>"
                                 style="width: 42px; height: 42px; object-fit: contain; flex-shrink: 0;">
                             <div class="list-card__info">
@@ -119,5 +162,88 @@
                     <% } %>
         </div>
     </div>
+
+    <script>
+        let activeSpecialFilter = 'todos';
+        let activeSearchQuery = '';
+
+        function filterVehicles(query) {
+            activeSearchQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            applyFilters();
+        }
+
+        function toggleSpecialFilter(filterType, button) {
+            if (activeSpecialFilter === filterType) {
+                activeSpecialFilter = 'todos';
+                button.classList.remove('active-special');
+            } else {
+                document.querySelectorAll('.special-filter-btn').forEach(btn => {
+                    btn.classList.remove('active-special');
+                });
+                activeSpecialFilter = filterType;
+                button.classList.add('active-special');
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const items = document.querySelectorAll('.vehicle-item');
+            let countVisible = 0;
+            
+            items.forEach(item => {
+                const name = item.getAttribute('data-name').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const plate = item.getAttribute('data-plate');
+                const isPcd = item.getAttribute('data-pcd') === '1';
+                const isElderly = item.getAttribute('data-elderly') === '1';
+                const needsSpecial = item.getAttribute('data-special') === '1';
+                
+                // Verificar busca por texto
+                const matchesSearch = name.includes(activeSearchQuery) || plate.includes(activeSearchQuery);
+                
+                // Verificar filtro especial secundário
+                let matchesSpecial = true;
+                if (activeSpecialFilter === 'pcd') {
+                    matchesSpecial = isPcd;
+                } else if (activeSpecialFilter === 'idoso') {
+                    matchesSpecial = isElderly;
+                } else if (activeSpecialFilter === 'vaga') {
+                    matchesSpecial = needsSpecial;
+                }
+                
+                if (matchesSearch && matchesSpecial) {
+                    item.style.display = 'flex';
+                    countVisible++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Tratamento de estado vazio para busca/filtros combinados
+            let emptyState = document.getElementById('search-empty-state');
+            if (countVisible === 0) {
+                if (!emptyState) {
+                    emptyState = document.createElement('div');
+                    emptyState.id = 'search-empty-state';
+                    emptyState.className = 'empty-state';
+                    emptyState.style.textAlign = 'center';
+                    emptyState.style.padding = '3rem 1rem';
+                    emptyState.innerHTML = '<p class="empty-state__text">Nenhuma solicitação corresponde aos filtros aplicados.</p>';
+                    const listGrid = document.querySelector('.list-grid');
+                    if (listGrid) {
+                        listGrid.style.display = 'none';
+                        listGrid.parentNode.appendChild(emptyState);
+                    }
+                } else {
+                    emptyState.style.display = 'block';
+                    const listGrid = document.querySelector('.list-grid');
+                    if (listGrid) listGrid.style.display = 'none';
+                }
+            } else {
+                if (emptyState) emptyState.style.display = 'none';
+                const listGrid = document.querySelector('.list-grid');
+                if (listGrid) listGrid.style.display = 'grid';
+            }
+        }
+    </script>
 
     <%- include('partials/footer') %>

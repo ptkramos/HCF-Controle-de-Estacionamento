@@ -7,12 +7,12 @@ const vehicleModel = {
             INSERT INTO vehicles (
                 full_name, cpf, sector, ramal, phone, email, 
                 vehicle_type, brand, model, color, plate, 
-                is_pcd, is_elderly, needs_special_spot, special_spot_details, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente')
+                is_pcd, is_elderly, needs_special_spot, special_spot_details, pcd_attachment, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendente')
         `).run(
             data.full_name, data.cpf, data.sector, data.ramal, data.phone, data.email,
             data.vehicle_type, data.brand, data.model, data.color, data.plate,
-            data.is_pcd ? 1 : 0, data.is_elderly ? 1 : 0, data.needs_special_spot ? 1 : 0, data.special_spot_details || null
+            data.is_pcd ? 1 : 0, data.is_elderly ? 1 : 0, data.needs_special_spot ? 1 : 0, data.special_spot_details || null, data.pcd_attachment || null
         );
         return result.lastInsertRowid;
     },
@@ -33,8 +33,21 @@ const vehicleModel = {
     },
 
     findByPlate(plate) {
+        if (!plate) return null;
         const db = getDatabase();
-        return db.prepare('SELECT * FROM vehicles WHERE plate = ?').get(plate);
+        const cleanPlate = plate.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        return db.prepare(`
+            SELECT * FROM vehicles 
+            WHERE UPPER(REPLACE(REPLACE(plate, '-', ''), ' ', '')) = ? 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        `).get(cleanPlate);
+    },
+
+    hasActiveRequestForCpf(cpf) {
+        const db = getDatabase();
+        const row = db.prepare("SELECT id FROM vehicles WHERE cpf = ? AND status IN ('pendente', 'aprovado')").get(cpf);
+        return !!row;
     },
 
     updateStatus(id, status, adminNotes, analyzedBy) {
@@ -44,6 +57,15 @@ const vehicleModel = {
             SET status = ?, admin_notes = ?, analyzed_by = ?, updated_at = CURRENT_TIMESTAMP 
             WHERE id = ?
         `).run(status, adminNotes || null, analyzedBy, id);
+    },
+
+    updateAttachment(id, filename) {
+        const db = getDatabase();
+        return db.prepare(`
+            UPDATE vehicles 
+            SET pcd_attachment = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?
+        `).run(filename, id);
     }
 };
 
