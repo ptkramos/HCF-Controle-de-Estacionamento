@@ -7,11 +7,14 @@ const smtpPass = process.env.SMTP_PASS;
 
 if (smtpUser && smtpPass) {
     transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
             user: smtpUser,
             pass: smtpPass
-        }
+        },
+        family: 4
     });
 } else {
     console.warn('\n⚠️  [EmailService] AVISO: SMTP_USER e/ou SMTP_PASS não foram encontrados nas variáveis de ambiente (.env).');
