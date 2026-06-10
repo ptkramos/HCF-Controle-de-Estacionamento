@@ -6,29 +6,54 @@ if (typeof dns.setDefaultResultOrder === 'function') {
     dns.setDefaultResultOrder('ipv4first');
 }
 
-// Inicializa o transportador SMTP de forma segura
 let transporter = null;
 const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASS;
 
-if (smtpUser && smtpPass) {
+async function resolveSmtpHost() {
+    try {
+        const addresses = await dns.promises.resolve4('smtp.gmail.com');
+        if (addresses && addresses.length > 0) {
+            const ip = addresses[Math.floor(Math.random() * addresses.length)];
+            console.log(`🔍 [EmailService] smtp.gmail.com resolvido para IPv4: ${ip}`);
+            return ip;
+        }
+    } catch (err) {
+        console.error('⚠️ [EmailService] Erro ao resolver smtp.gmail.com via IPv4, usando host default:', err);
+    }
+    return 'smtp.gmail.com';
+}
+
+async function getTransporter() {
+    if (!smtpUser || !smtpPass) {
+        return null;
+    }
+    if (transporter) {
+        return transporter;
+    }
+
+    const ipHost = await resolveSmtpHost();
+
     transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: ipHost,
         port: 465,
         secure: true,
         auth: {
             user: smtpUser,
             pass: smtpPass
         },
-        family: 4,
-        lookup: (hostname, options, callback) => {
-            dns.lookup(hostname, { ...options, family: 4 }, callback);
+        tls: {
+            servername: 'smtp.gmail.com'
         },
         connectionTimeout: 10000, // 10 segundos de limite para conexão
         greetingTimeout: 10000,   // 10 segundos para o greeting SMTP
         socketTimeout: 15000      // 15 segundos de inatividade do socket
     });
-} else {
+
+    return transporter;
+}
+
+if (!smtpUser || !smtpPass) {
     console.warn('\n⚠️  [EmailService] AVISO: SMTP_USER e/ou SMTP_PASS não foram encontrados nas variáveis de ambiente (.env).');
     console.warn('⚠️  Os disparos de e-mail serão simulados no console.\n');
 }
@@ -137,11 +162,12 @@ const emailService = {
     async sendSubmissionConfirmation(vehicle) {
         const subject = '🏥 HCF - Solicitação de Estacionamento Recebida';
         const html = this.getConfirmationHtml(vehicle);
+        const activeTransporter = await getTransporter();
 
-        if (transporter) {
+        if (activeTransporter) {
             try {
                 console.log(`📨 [EmailService] Tentando enviar e-mail de confirmação via SMTP para: ${vehicle.email}...`);
-                await transporter.sendMail({
+                await activeTransporter.sendMail({
                     from: `"Estacionamento HCF" <${smtpUser}>`,
                     to: vehicle.email,
                     subject: subject,
@@ -166,8 +192,9 @@ const emailService = {
         const statusLabel = isApproved ? 'APROVADA' : 'INDEFERIDA';
         const subject = `🏥 HCF - Solicitação de Estacionamento: ${statusLabel}`;
         const html = this.getStatusUpdateHtml(vehicle);
+        const activeTransporter = await getTransporter();
 
-        if (transporter) {
+        if (activeTransporter) {
             try {
                 const mailOptions = {
                     from: `"Estacionamento HCF" <${smtpUser}>`,
@@ -186,7 +213,7 @@ const emailService = {
                 }
 
                 console.log(`📨 [EmailService] Tentando enviar e-mail de status (${statusLabel}) via SMTP para: ${vehicle.email}...`);
-                await transporter.sendMail(mailOptions);
+                await activeTransporter.sendMail(mailOptions);
                 console.log(`✉️  E-mail de atualização de status (${statusLabel}) enviado para: ${vehicle.email}`);
             } catch (error) {
                 console.error(`❌  Erro ao enviar e-mail de atualização via SMTP para ${vehicle.email}:`, error);
