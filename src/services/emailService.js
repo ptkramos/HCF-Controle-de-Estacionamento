@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
+const MailComposer = require('nodemailer/lib/mail-composer');
 
 // Forçar a resolução de DNS do Node.js a priorizar IPv4 para evitar erros ENETUNREACH de IPv6
 if (typeof dns.setDefaultResultOrder === 'function') {
@@ -10,16 +11,97 @@ let transporter = null;
 const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASS;
 
+// Variáveis para Gmail API via REST (OAuth2)
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const googleRefreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+const isOAuth2Configured = !!(smtpUser && googleClientId && googleClientSecret && googleRefreshToken);
+
+// Cache do token de acesso do Google OAuth2
+let cachedAccessToken = null;
+let tokenExpiryTime = 0;
+
+async function getGmailAccessToken() {
+    if (cachedAccessToken && Date.now() < tokenExpiryTime) {
+        return cachedAccessToken;
+    }
+
+    console.log('🔑 [EmailService] Solicitando novo access token via OAuth2 para o Gmail...');
+    
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            client_id: googleClientId,
+            client_secret: googleClientSecret,
+            refresh_token: googleRefreshToken,
+            grant_type: 'refresh_token'
+        })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Falha ao obter access token do Gmail: ${errorText}`);
+    }
+
+    const data = await response.json();
+    cachedAccessToken = data.access_token;
+    // Expira em 55 minutos (margem de segurança dos 60 minutos do Google)
+    tokenExpiryTime = Date.now() + (data.expires_in - 300) * 1000;
+    
+    return cachedAccessToken;
+}
+
+async function sendMailViaGmailApi(mailOptions) {
+    const accessToken = await getGmailAccessToken();
+
+    // Compilar a mensagem MIME bruta usando o MailComposer do nodemailer
+    const mail = new MailComposer(mailOptions).compile();
+    const rawMime = await new Promise((resolve, reject) => {
+        mail.build((err, message) => {
+            if (err) reject(err);
+            else resolve(message);
+        });
+    });
+
+    // Formatar como Base64URL segura
+    const base64UrlMessage = Buffer.from(rawMime)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            raw: base64UrlMessage
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+    }
+
+    console.log(`✉️  E-mail enviado com sucesso via Gmail REST API para: ${mailOptions.to}`);
+}
+
 async function resolveSmtpHost() {
     try {
         const addresses = await dns.promises.resolve4('smtp.gmail.com');
         if (addresses && addresses.length > 0) {
             const ip = addresses[Math.floor(Math.random() * addresses.length)];
-            console.log(`🔍 [EmailService] smtp.gmail.com resolvido para IPv4: ${ip}`);
             return ip;
         }
     } catch (err) {
-        console.error('⚠️ [EmailService] Erro ao resolver smtp.gmail.com via IPv4, usando host default:', err);
+        // Ignora silenciosamente
     }
     return 'smtp.gmail.com';
 }
@@ -53,9 +135,15 @@ async function getTransporter() {
     return transporter;
 }
 
-if (!smtpUser || !smtpPass) {
-    console.warn('\n⚠️  [EmailService] AVISO: SMTP_USER e/ou SMTP_PASS não foram encontrados nas variáveis de ambiente (.env).');
-    console.warn('⚠️  Os disparos de e-mail serão simulados no console.\n');
+if (!isOAuth2Configured) {
+    if (!smtpUser || !smtpPass) {
+        console.warn('\n⚠️  [EmailService] AVISO: SMTP_USER e/ou SMTP_PASS não foram encontrados nas variáveis de ambiente (.env).');
+        console.warn('⚠️  Os disparos de e-mail serão simulados no console.\n');
+    } else {
+        console.log('ℹ️  [EmailService] Configurado com SMTP do Gmail (desenvolvimento local).');
+    }
+} else {
+    console.log('🌐 [EmailService] Configurado via Gmail REST API com OAuth2 (produção).');
 }
 
 const emailService = {
@@ -162,23 +250,34 @@ const emailService = {
     async sendSubmissionConfirmation(vehicle) {
         const subject = '🏥 HCF - Solicitação de Estacionamento Recebida';
         const html = this.getConfirmationHtml(vehicle);
-        const activeTransporter = await getTransporter();
 
-        if (activeTransporter) {
+        const mailOptions = {
+            from: `"Estacionamento HCF" <${smtpUser}>`,
+            to: vehicle.email,
+            subject: subject,
+            html: html
+        };
+
+        if (isOAuth2Configured) {
             try {
-                console.log(`📨 [EmailService] Tentando enviar e-mail de confirmação via SMTP para: ${vehicle.email}...`);
-                await activeTransporter.sendMail({
-                    from: `"Estacionamento HCF" <${smtpUser}>`,
-                    to: vehicle.email,
-                    subject: subject,
-                    html: html
-                });
-                console.log(`✉️  E-mail de confirmação de cadastro enviado para: ${vehicle.email}`);
+                console.log(`📨 [EmailService] Tentando enviar e-mail de confirmação via Gmail REST API para: ${vehicle.email}...`);
+                await sendMailViaGmailApi(mailOptions);
             } catch (error) {
-                console.error(`❌  Erro ao enviar e-mail de confirmação via SMTP para ${vehicle.email}:`, error);
+                console.error(`❌  Erro ao enviar e-mail de confirmação via Gmail REST API para ${vehicle.email}:`, error);
             }
         } else {
-            console.log(`[SIMULAÇÃO E-MAIL] Confirmação enviada para ${vehicle.email} | Placa: ${vehicle.plate}`);
+            const activeTransporter = await getTransporter();
+            if (activeTransporter) {
+                try {
+                    console.log(`📨 [EmailService] Tentando enviar e-mail de confirmação via SMTP para: ${vehicle.email}...`);
+                    await activeTransporter.sendMail(mailOptions);
+                    console.log(`✉️  E-mail de confirmação de cadastro enviado via SMTP para: ${vehicle.email}`);
+                } catch (error) {
+                    console.error(`❌  Erro ao enviar e-mail de confirmação via SMTP para ${vehicle.email}:`, error);
+                }
+            } else {
+                console.log(`[SIMULAÇÃO E-MAIL] Confirmação enviada para ${vehicle.email} | Placa: ${vehicle.plate}`);
+            }
         }
     },
 
@@ -192,34 +291,43 @@ const emailService = {
         const statusLabel = isApproved ? 'APROVADA' : 'INDEFERIDA';
         const subject = `🏥 HCF - Solicitação de Estacionamento: ${statusLabel}`;
         const html = this.getStatusUpdateHtml(vehicle);
-        const activeTransporter = await getTransporter();
 
-        if (activeTransporter) {
-            try {
-                const mailOptions = {
-                    from: `"Estacionamento HCF" <${smtpUser}>`,
-                    to: vehicle.email,
-                    subject: subject,
-                    html: html
-                };
+        const mailOptions = {
+            from: `"Estacionamento HCF" <${smtpUser}>`,
+            to: vehicle.email,
+            subject: subject,
+            html: html
+        };
 
-                if (isApproved && pdfBuffer) {
-                    mailOptions.attachments = [
-                        {
-                            filename: `selo_${vehicle.plate.toUpperCase()}.pdf`,
-                            content: pdfBuffer
-                        }
-                    ];
+        if (isApproved && pdfBuffer) {
+            mailOptions.attachments = [
+                {
+                    filename: `selo_${vehicle.plate.toUpperCase()}.pdf`,
+                    content: pdfBuffer
                 }
+            ];
+        }
 
-                console.log(`📨 [EmailService] Tentando enviar e-mail de status (${statusLabel}) via SMTP para: ${vehicle.email}...`);
-                await activeTransporter.sendMail(mailOptions);
-                console.log(`✉️  E-mail de atualização de status (${statusLabel}) enviado para: ${vehicle.email}`);
+        if (isOAuth2Configured) {
+            try {
+                console.log(`📨 [EmailService] Tentando enviar e-mail de status (${statusLabel}) via Gmail REST API para: ${vehicle.email}...`);
+                await sendMailViaGmailApi(mailOptions);
             } catch (error) {
-                console.error(`❌  Erro ao enviar e-mail de atualização via SMTP para ${vehicle.email}:`, error);
+                console.error(`❌  Erro ao enviar e-mail de status via Gmail REST API para ${vehicle.email}:`, error);
             }
         } else {
-            console.log(`[SIMULAÇÃO E-MAIL] Status ${statusLabel} enviado para ${vehicle.email} | Anexo: ${isApproved && pdfBuffer ? 'Sim' : 'Não'}`);
+            const activeTransporter = await getTransporter();
+            if (activeTransporter) {
+                try {
+                    console.log(`📨 [EmailService] Tentando enviar e-mail de status (${statusLabel}) via SMTP para: ${vehicle.email}...`);
+                    await activeTransporter.sendMail(mailOptions);
+                    console.log(`✉️  E-mail de atualização de status (${statusLabel}) enviado via SMTP para: ${vehicle.email}`);
+                } catch (error) {
+                    console.error(`❌  Erro ao enviar e-mail de atualização via SMTP para ${vehicle.email}:`, error);
+                }
+            } else {
+                console.log(`[SIMULAÇÃO E-MAIL] Status ${statusLabel} enviado para ${vehicle.email} | Anexo: ${isApproved && pdfBuffer ? 'Sim' : 'Não'}`);
+            }
         }
     }
 };
