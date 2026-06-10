@@ -29,7 +29,14 @@ class PdfService {
 
                 const buffers = [];
                 doc.on('data', buffers.push.bind(buffers));
-                doc.on('end', () => resolve(Buffer.concat(buffers)));
+                doc.on('end', () => {
+                    console.log(`   [pdfService] PDF gerado com sucesso para a placa ${vehicle.plate}.`);
+                    resolve(Buffer.concat(buffers));
+                });
+                doc.on('error', (err) => {
+                    console.error(`   [pdfService] Erro no stream do PDFDocument para a placa ${vehicle.plate}:`, err);
+                    reject(err);
+                });
 
                 // Título
                 doc.font('Helvetica-Bold')

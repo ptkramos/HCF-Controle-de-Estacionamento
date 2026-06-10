@@ -14,7 +14,10 @@ if (smtpUser && smtpPass) {
             user: smtpUser,
             pass: smtpPass
         },
-        family: 4
+        family: 4,
+        connectionTimeout: 10000, // 10 segundos de limite para conexão
+        greetingTimeout: 10000,   // 10 segundos para o greeting SMTP
+        socketTimeout: 15000      // 15 segundos de inatividade do socket
     });
 } else {
     console.warn('\n⚠️  [EmailService] AVISO: SMTP_USER e/ou SMTP_PASS não foram encontrados nas variáveis de ambiente (.env).');
@@ -128,6 +131,7 @@ const emailService = {
 
         if (transporter) {
             try {
+                console.log(`📨 [EmailService] Tentando enviar e-mail de confirmação via SMTP para: ${vehicle.email}...`);
                 await transporter.sendMail({
                     from: `"Estacionamento HCF" <${smtpUser}>`,
                     to: vehicle.email,
@@ -172,6 +176,7 @@ const emailService = {
                     ];
                 }
 
+                console.log(`📨 [EmailService] Tentando enviar e-mail de status (${statusLabel}) via SMTP para: ${vehicle.email}...`);
                 await transporter.sendMail(mailOptions);
                 console.log(`✉️  E-mail de atualização de status (${statusLabel}) enviado para: ${vehicle.email}`);
             } catch (error) {
