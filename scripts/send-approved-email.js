@@ -20,6 +20,8 @@ const getArgValue = (flag) => {
 const id = getArgValue('--id');
 const testEmail = getArgValue('--test-email');
 const limit = parseInt(getArgValue('--limit')) || 1;
+const since = getArgValue('--since');
+const status = getArgValue('--status') || 'aprovado';
 
 async function run() {
     try {
@@ -38,17 +40,45 @@ async function run() {
             
             await sendEmailForVehicle(vehicle);
         } else {
-            // Buscar os últimos registros aprovados
             const db = getDatabase();
-            const vehicles = db.prepare(`
-                SELECT * FROM vehicles 
-                WHERE status = 'aprovado' 
-                ORDER BY id DESC 
-                LIMIT ?
-            `).all(limit);
+            let vehicles = [];
+
+            if (since) {
+                // Buscar registros atualizados a partir de uma data/hora específica
+                let query = 'SELECT * FROM vehicles WHERE updated_at >= ?';
+                const queryParams = [since];
+
+                if (status !== 'all') {
+                    query += ' AND status = ?';
+                    queryParams.push(status);
+                } else {
+                    query += " AND status IN ('aprovado', 'indeferido')";
+                }
+
+                query += ' ORDER BY updated_at ASC';
+                console.log(`🔍 Buscando registros com status "${status}" desde ${since}...`);
+                vehicles = db.prepare(query).all(...queryParams);
+            } else {
+                // Buscar os últimos registros conforme o limite informado
+                let query = 'SELECT * FROM vehicles';
+                const queryParams = [];
+
+                if (status !== 'all') {
+                    query += ' WHERE status = ?';
+                    queryParams.push(status);
+                } else {
+                    query += " WHERE status IN ('aprovado', 'indeferido')";
+                }
+
+                query += ' ORDER BY id DESC LIMIT ?';
+                queryParams.push(limit);
+
+                console.log(`🔍 Buscando os últimos ${limit} registros com status "${status}"...`);
+                vehicles = db.prepare(query).all(...queryParams);
+            }
             
             if (vehicles.length === 0) {
-                console.log('⚠️ Nenhum veículo aprovado encontrado no banco.');
+                console.log('⚠️ Nenhum veículo correspondente aos filtros encontrado no banco.');
                 process.exit(0);
             }
             
